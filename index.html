@@ -21,7 +21,7 @@ window.HISAAB_CONFIG = {
 };
 (function () { try { var t = localStorage.getItem('hisaab.theme'); t = t && JSON.parse(t); if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t); } catch (e) {} })();
 </script>
-<link rel="stylesheet" href="app.css?v=202610081211">
+<link rel="stylesheet" href="app.css?v=202610081217">
 </head>
 <body>
 <div id="splash"><svg class="logo" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"> <defs> <linearGradient id="lbg" x1="0" y1="0" x2="1" y2="1"> <stop offset="0" stop-color="#0a8a62"/> <stop offset="1" stop-color="#00513a"/> </linearGradient> <linearGradient id="lcoin" x1="0" y1="0" x2="0" y2="1"> <stop offset="0" stop-color="#ffd25a"/> <stop offset="1" stop-color="#f0a500"/> </linearGradient> </defs> <rect width="512" height="512" rx="116" fill="url(#lbg)"/> <!-- subtle ledger lines --> <g stroke="#ffffff" stroke-opacity=".07" stroke-width="10" stroke-linecap="round"> <line x1="96" y1="120" x2="416" y2="120"/> <line x1="96" y1="392" x2="416" y2="392"/> </g> <!-- H pillars --> <rect x="132" y="128" width="72" height="256" rx="30" fill="#ffffff"/> <rect x="308" y="128" width="72" height="256" rx="30" fill="#ffffff"/> <!-- crossbar --> <rect x="190" y="228" width="132" height="56" rx="20" fill="#ffffff"/> <!-- coin --> <circle cx="256" cy="256" r="66" fill="#00513a" opacity=".35"/> <circle cx="256" cy="252" r="60" fill="url(#lcoin)" stroke="#ffffff" stroke-width="12"/> <circle cx="256" cy="252" r="36" fill="none" stroke="#c98500" stroke-width="6" opacity=".55"/> <path d="M236 252 l14 14 l26 -30" fill="none" stroke="#7a4f00" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/> </svg><div class="word">Hisaab</div><div class="tag">Household expenses, kept simple</div><div class="dots"><i></i><i></i><i></i></div></div>
@@ -41,9 +41,9 @@ window.HISAAB_CONFIG = {
   <div id="overlay"></div>
   <div id="snackHost"></div>
 </div>
-<script src="icons.js?v=202610081211"></script>
-<script src="db.js?v=202610081211"></script>
-<script src="app.js?v=202610081211"></script>
+<script src="icons.js?v=202610081217"></script>
+<script src="db.js?v=202610081217"></script>
+<script src="app.js?v=202610081217"></script>
 <script>
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(function () {});
 </script>

@@ -132,9 +132,9 @@ function findOwnSheet() {
     .then(function (r) { return (r.files || [])[0] || null; });
 }
 function suggestExisting() {
-  var q = "mimeType='application/vnd.google-apps.spreadsheet' and 'me' in owners and trashed=false and (name contains 'xpense' or name contains 'Hisaab' or name contains 'Budget')";
-  return api('GET', DRIVE + '?' + qs({ q: q, fields: 'files(id,name,modifiedTime)', pageSize: 6, orderBy: 'modifiedTime desc' }))
-    .then(function (r) { return (r.files || []).filter(function (f) { return !/^BACKUP/i.test(f.name); }); });
+  var q = "mimeType='application/vnd.google-apps.spreadsheet' and 'me' in owners and trashed=false and (name contains 'Expense' or name contains 'Expenses' or name contains 'Hisaab' or name contains 'Budget' or name contains 'Kharch')";
+  return api('GET', DRIVE + '?' + qs({ q: q, fields: 'files(id,name,modifiedTime)', pageSize: 10, orderBy: 'modifiedTime desc' }))
+    .then(function (r) { return (r.files || []).filter(function (f) { return !/^(BACKUP|Copy of)|\(Responses\)/i.test(f.name); }); });
 }
 function fileInfo(id) { return api('GET', DRIVE + '/' + id + '?' + qs({ fields: FILE_FIELDS, supportsAllDrives: true })); }
 function markSheet(id) {

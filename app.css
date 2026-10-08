@@ -472,3 +472,10 @@ body { padding-top: env(safe-area-inset-top); }
 .catbtns .btn svg { margin-left: 0; }
 .mcard { width: calc(100% - 32px); }
 a.ditem { text-decoration: none; }
+
+@media (min-width: 640px) {
+  html { background: var(--surface-dim); }
+  body { background: var(--surface-dim); }
+  #app, .flow { left: 50%; right: auto; width: 480px; margin-left: -240px; box-shadow: 0 0 0 1px var(--outline-variant), 0 12px 40px rgba(0,0,0,.12); }
+  .flow { top: 0; bottom: 0; }
+}
