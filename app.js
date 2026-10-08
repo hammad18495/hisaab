@@ -368,9 +368,12 @@ function loadSuggestions() {
 }
 function checkRequests() {
   return guard(DB.sharedWithMe()).then(function (files) {
-    S.requests = files; renderHome();
+    S.requests = files; S.reqError = null; renderHome();
     var p = findPage('requests'); if (p) renderRequests(p.el);
-  }).catch(function () {});
+  }).catch(function (e) {
+    S.reqError = e && !e.auth ? e.message : null;
+    var p = findPage('requests'); if (p) renderRequests(p.el);
+  });
 }
 function newRequestCount() {
   var seen = store('seenRequests') || [];
@@ -598,6 +601,7 @@ function openRequests() {
 }
 function renderRequests(el) {
   var body = el.querySelector('[data-body]'); if (!body) return;
+  if (S.reqError && !S.requests.length) { body.innerHTML = '<div class="empty">' + ic('cloudOff') + '<div class="title-m" style="color:var(--on-surface)">Couldn’t check sharing requests</div><div class="body-m" style="margin-top:6px">' + esc(S.reqError) + '</div></div>'; return; }
   if (!S.requests.length) { body.innerHTML = '<div class="empty">' + ic('inbox') + '<div class="title-m" style="color:var(--on-surface)">No sharing requests</div><div class="body-m" style="margin-top:6px">When someone shares their expenses with ' + esc((S.user && S.user.email) || 'you') + ', it shows up here.</div></div>'; return; }
   body.innerHTML = S.requests.map(function (f, i) {
     var o = (f.owners || [])[0] || {}, by = f.sharingUser || o;

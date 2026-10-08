@@ -141,9 +141,17 @@ function markSheet(id) {
   return api('PATCH', DRIVE + '/' + id + '?' + qs({ fields: 'id' }), { appProperties: { hisaab: 'sheet' }, description: 'Expenses sheet used by the Hisaab app (hisaab-app-sheet).' });
 }
 function sharedWithMe() {
-  var q = "sharedWithMe = true and trashed=false and mimeType='application/vnd.google-apps.spreadsheet' and (appProperties has { key='hisaab' and value='sheet' } or fullText contains 'hisaab-app-sheet')";
-  return api('GET', DRIVE + '?' + qs({ q: q, fields: 'files(' + FILE_FIELDS + ')', pageSize: 50, orderBy: 'sharedWithMeTime desc' }))
-    .then(function (r) { return r.files || []; });
+  // Two simple queries (Drive can't sort fullText queries), merged and sorted here.
+  var base = "sharedWithMe = true and trashed = false and mimeType = 'application/vnd.google-apps.spreadsheet'";
+  var q1 = base + " and appProperties has { key='hisaab' and value='sheet' }";
+  var q2 = base + " and fullText contains 'hisaab-app-sheet'";
+  function list(q) { return api('GET', DRIVE + '?' + qs({ q: q, fields: 'files(' + FILE_FIELDS + ')', pageSize: 50 })).then(function (r) { return r.files || []; }, function () { return []; }); }
+  return Promise.all([list(q1), list(q2)]).then(function (res) {
+    var seen = {}, out = [];
+    res[0].concat(res[1]).forEach(function (f) { if (!seen[f.id]) { seen[f.id] = 1; out.push(f); } });
+    out.sort(function (a, b) { return String(b.sharedWithMeTime || '').localeCompare(String(a.sharedWithMeTime || '')); });
+    return out;
+  });
 }
 function share(id, email, role, fromName) {
   return api('POST', DRIVE + '/' + id + '/permissions?' + qs({
