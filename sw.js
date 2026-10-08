@@ -1,6 +1,6 @@
 /* Hisaab service worker: app shell offline, never caches Google API calls */
-var CACHE = 'hisaab-202610081220';
-var SHELL = ['./', 'index.html', 'app.css?v=202610081220', 'icons.js?v=202610081220', 'db.js?v=202610081220', 'app.js?v=202610081220', 'manifest.webmanifest',
+var CACHE = 'hisaab-202610081224';
+var SHELL = ['./', 'index.html', 'app.css?v=202610081224', 'icons.js?v=202610081224', 'db.js?v=202610081224', 'app.js?v=202610081224', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'img/intro-home.jpg', 'img/intro-add.jpg', 'img/intro-month.jpg', 'img/intro-share.jpg'];
 self.addEventListener('install', function (e) { e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); })); });
 self.addEventListener('activate', function (e) {

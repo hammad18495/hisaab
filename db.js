@@ -469,7 +469,17 @@ function categoryUsage(id, t, name) {
 function removeCategory(id, t, name, mapTo, keepHistory, user) {
   return getCategories(id, t).then(function (cats) {
     var tabsToScan = keepHistory || !mapTo ? t.months.filter(function (m) { return m.name === t.current; }) : t.months.concat(t.summaries);
-    return Promise.all(tabsToScan.map(function (tb) { return month(id, tb).then(function (d) { return { tab: tb, d: d }; }); })).then(function (all) {
+    // one batched read of column E (category labels) for every tab involved
+    var ranges = tabsToScan.map(function (tb) { return a1(tb.name) + '!E1:E' + Math.max(tb.rowCount || 200, 20); });
+    return api('GET', SHEETS + '/' + id + '/values:batchGet?' + ranges.map(function (r) { return 'ranges=' + encodeURIComponent(r); }).join('&')).then(function (res) {
+      return res.valueRanges.map(function (vr, i) {
+        var col = (vr.values || []).map(function (row) { return str(row[0]); }), cats = [], start = -1;
+        for (var r = 0; r < col.length; r++) if (/^category$/i.test(col[r])) { start = r; break; }
+        if (start >= 0) for (r = start + 1; r < col.length && col[r]; r++) cats.push({ label: col[r], row: r + 1 });
+        var tb = tabsToScan[i];
+        return { tab: tb, d: { header: tb.header == null ? -1 : tb.header, categories: cats } };
+      });
+    }).then(function (all) {
       var requests = [];
       all.forEach(function (x) {
         var tb = x.tab, d = x.d;
