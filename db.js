@@ -275,14 +275,18 @@ function month(id, tab) {
 
 /* ================= writes ================= */
 function addEntry(id, tab, e) {
-  var hr = (tab.header >= 0 ? tab.header : 5) + 1; // 1-based header row
-  var range = encodeURIComponent(a1(tab.name) + '!A' + hr + ':D');
-  return api('POST', SHEETS + '/' + id + '/values/' + range + ':append?' + qs({ valueInputOption: 'USER_ENTERED', insertDataOption: 'OVERWRITE', includeValuesInResponse: false }),
-    { values: [[e.date, e.category, Number(e.amount), e.comment || '']] })
-    .then(function (r) {
-      var m = /![A-Z]+(\d+)/.exec((r.updates && r.updates.updatedRange) || '');
-      return { row: m ? Number(m[1]) : null };
-    });
+  // Find the first empty row under the last entry in A:D (values.get trims trailing empty rows).
+  var first = (tab.header >= 0 ? tab.header : 5) + 2;
+  return api('GET', SHEETS + '/' + id + '/values/' + encodeURIComponent(a1(tab.name) + '!A' + first + ':D') + '?valueRenderOption=UNFORMATTED_VALUE').then(function (r) {
+    var rows = r.values || [], row = first + rows.length;
+    var grow = row > (tab.rowCount || 1000)
+      ? api('POST', SHEETS + '/' + id + ':batchUpdate', { requests: [{ appendDimension: { sheetId: tab.sheetId, dimension: 'ROWS', length: 50 } }] }).then(function () { tab.rowCount = (tab.rowCount || 0) + 50; })
+      : Promise.resolve();
+    return grow.then(function () {
+      return api('PUT', SHEETS + '/' + id + '/values/' + encodeURIComponent(a1(tab.name) + '!A' + row + ':D' + row) + '?valueInputOption=USER_ENTERED',
+        { values: [[e.date, e.category, Number(e.amount), e.comment || '']] });
+    }).then(function () { return { row: row }; });
+  });
 }
 function deleteEntry(id, tab, e) {
   return api('GET', SHEETS + '/' + id + '/values/' + encodeURIComponent(a1(tab.name) + '!A' + e.row + ':D' + e.row) + '?valueRenderOption=UNFORMATTED_VALUE').then(function (r) {
