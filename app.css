@@ -479,3 +479,6 @@ a.ditem { text-decoration: none; }
   #app, .flow { left: 50%; right: auto; width: 480px; margin-left: -240px; box-shadow: 0 0 0 1px var(--outline-variant), 0 12px 40px rgba(0,0,0,.12); }
   .flow { top: 0; bottom: 0; }
 }
+
+.byline { display: flex; align-items: center; gap: 4px; font-size: 12px; line-height: 16px; color: var(--primary); margin-top: 2px; }
+.byline svg { width: 14px; height: 14px; }

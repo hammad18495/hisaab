@@ -502,9 +502,16 @@ function entriesFor(name) {
   list.sort(function (a, b) { return b.date > a.date ? 1 : b.date < a.date ? -1 : ((b.row || 1e9) - (a.row || 1e9)); });
   return list;
 }
+function whoLabel(ab) {
+  if (!ab) return '';
+  var mine = S.user && ab.email && String(ab.email).toLowerCase() === String(S.user.email).toLowerCase();
+  return mine ? 'You' : firstName(ab.name || ab.email);
+}
 function entryRow(e, id) {
+  var who = whoLabel(e.addedBy);
   return '<button class="li rp" style="width:100%;text-align:left" data-e="' + id + '"><div class="avatar">' + cic(catIcon(e.category)) + '</div>' +
-    '<div class="txt"><div class="body-l">' + esc(e.category) + '</div><div class="body-m muted">' + (e.comment ? esc(e.comment) : '<span style="opacity:.6">No comment</span>') + (id.charAt(0) === 'r' ? ' · ' + esc(niceDate(e.date)) : '') + '</div></div>' +
+    '<div class="txt"><div class="body-l">' + esc(e.category) + '</div><div class="body-m muted">' + (e.comment ? esc(e.comment) : '<span style="opacity:.6">No comment</span>') + (id.charAt(0) === 'r' ? ' · ' + esc(niceDate(e.date)) : '') + '</div>' +
+    (who ? '<div class="byline">' + ic('account') + 'by ' + esc(who) + '</div>' : '') + '</div>' +
     '<div class="trail title-m num">' + money(e.amount) + (e.pending ? '<span class="pendingdot">' + ic('sync') + '</span>' : '') + '</div></button>';
 }
 
@@ -878,7 +885,8 @@ function openAdd(opts) {
     if (!a) { el.querySelector('#fAmtWrap').classList.add('err'); el.querySelector('#fAmtErr').textContent = 'Enter an amount'; amt.focus(); return; }
     if (!chosen) { el.querySelector('#fCatErr').textContent = 'Choose a category'; el.querySelector('#fCats').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
     haptic();
-    var entry = { id: 'q' + Date.now(), sheetId: S.activeId, tab: target, category: chosen, amount: a, comment: com.value.trim(), date: date.value || today() };
+    var by = { name: (S.user && S.user.name) || '', email: (S.user && S.user.email) || '' };
+    var entry = { id: 'q' + Date.now(), sheetId: S.activeId, tab: target, category: chosen, amount: a, comment: com.value.trim(), date: date.value || today(), by: by, addedBy: { name: by.name, email: by.email, at: '' } };
     queue.push(entry); store('queue', queue);
     popPage(); renderHome(); refreshOpenMonth(target);
     snack(money(a) + ' added to ' + target + ' · ' + chosen);
@@ -1012,6 +1020,9 @@ function openDetail(e) {
     '<div class="card" style="margin:0 16px">' +
       '<div class="set-li">' + ic('calDay') + '<div class="txt"><div class="label-m muted">Date</div><div class="body-l">' + esc(niceDate(e.date, true)) + '</div></div></div><div class="divider"></div>' +
       '<div class="set-li">' + ic('comment') + '<div class="txt"><div class="label-m muted">Comments</div><div class="body-l" style="word-break:break-word">' + (e.comment ? esc(e.comment) : '<span class="muted">No comment</span>') + '</div></div></div><div class="divider"></div>' +
+      '<div class="set-li">' + ic('account') + '<div class="txt"><div class="label-m muted">Added by</div><div class="body-l">' + (e.addedBy
+        ? esc(e.addedBy.name || e.addedBy.email) + (whoLabel(e.addedBy) === 'You' ? ' (you)' : '') + '</div><div class="body-s muted">' + esc(e.addedBy.email || '') + (e.addedBy.at ? ' · ' + esc(niceDate(e.addedBy.at.slice(0, 10))) + ' at ' + esc(e.addedBy.at.slice(11)) : '')
+        : '<span class="muted">Not recorded</span></div><div class="body-s muted">Added before Hisaab tracked this, or typed directly in the sheet') + '</div></div></div><div class="divider"></div>' +
       '<div class="set-li">' + ic(e.pending ? 'sync' : 'check') + '<div class="txt"><div class="label-m muted">Month sheet</div><div class="body-l">' + esc(e.tab) + (e.pending ? ' · waiting to sync' : '') + '</div></div></div>' +
     '</div>' + (edit ? '<div class="actions-row" style="margin-top:16px"><button class="btn tonal rp" id="dDup">' + ic('copy') + 'Add similar</button><button class="btn danger rp" id="dDel">' + ic('del') + 'Delete</button></div>' : '') + '</div>', { name: 'detail' });
   if (!edit) return;

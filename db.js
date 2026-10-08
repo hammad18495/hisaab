@@ -114,6 +114,15 @@ function parseTextDate(s, key) {
   }
   return pick ? pick[0] + '-' + pad2(pick[1]) + '-' + pad2(pick[2]) : null;
 }
+/** Note on column A: "Added by Name <email>\n2026-10-08 14:05" */
+function addedByNote(user) {
+  var d = new Date();
+  return 'Added by ' + (user && user.name || 'Someone') + ' <' + (user && user.email || '') + '>\n' + isoOf(d) + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + '\n(via Hisaab)';
+}
+function parseAddedBy(note) {
+  var m = /Added by (.*?) <([^>]*)>(?:\s*\n\s*(\d{4}-\d{2}-\d{2} \d{2}:\d{2}))?/.exec(note || '');
+  return m ? { name: m[1], email: m[2], at: m[3] || '' } : null;
+}
 function headerRow(rows) { for (var r = 0; r < Math.min(rows.length, 15); r++) if (String((rows[r] || [])[0] || '').trim().toUpperCase() === 'DATE') return r; return -1; }
 function cell(rows, r, c) { return ((rows[r] || [])[c]); }
 function str(v) { return v == null ? '' : String(v).trim(); }
@@ -223,9 +232,12 @@ function month(id, tab) {
   var range = encodeURIComponent(a1(tab.name) + '!A1:F' + Math.max(tab.rowCount || 200, 20));
   return Promise.all([
     api('GET', SHEETS + '/' + id + '/values/' + range + '?valueRenderOption=UNFORMATTED_VALUE'),
-    api('GET', SHEETS + '/' + id + '/values/' + range + '?valueRenderOption=FORMATTED_VALUE')
+    api('GET', SHEETS + '/' + id + '/values/' + range + '?valueRenderOption=FORMATTED_VALUE'),
+    api('GET', SHEETS + '/' + id + '?' + qs({ ranges: a1(tab.name) + '!A1:A' + Math.max(tab.rowCount || 200, 20), fields: 'sheets(data(startRow,rowData(values(note))))' })).catch(function () { return null; })
   ]).then(function (res) {
     var values = res[0].values || [], shown = res[1].values || [];
+    var notes = [];
+    try { var gd = res[2].sheets[0].data[0], st = gd.startRow || 0; (gd.rowData || []).forEach(function (rd, i) { notes[st + i] = rd && rd.values && rd.values[0] && rd.values[0].note || ''; }); } catch (e) {}
     var n = Math.max(values.length, shown.length), key = monthKey(tab.name);
     var summary = [];
     for (var r = 0; r < Math.min(4, n); r++) {
@@ -242,7 +254,7 @@ function month(id, tab) {
         if (typeof d === 'number' && d > 36000) date = serialToIso(d);
         else if (typeof d === 'string' && d.trim()) date = parseTextDate(d, key) || '';
         if (date) lastDate = date; else date = lastDate;
-        entries.push({ row: r + 1, date: date, category: cat, amount: amt || 0, comment: str(cell(values, r, 3)) });
+        entries.push({ row: r + 1, date: date, category: cat, amount: amt || 0, comment: str(cell(values, r, 3)), addedBy: parseAddedBy(notes[r]) });
       }
     }
     var categories = [], totals = [], sections = [], catHeader = -1, end = -1;
@@ -293,6 +305,9 @@ function addEntry(id, tab, e) {
     return grow.then(function () {
       return api('PUT', SHEETS + '/' + id + '/values/' + encodeURIComponent(a1(tab.name) + '!A' + row + ':D' + row) + '?valueInputOption=USER_ENTERED',
         { values: [[e.date, e.category, Number(e.amount), e.comment || '']] });
+    }).then(function () {
+      if (!e.by) return;
+      return api('POST', SHEETS + '/' + id + ':batchUpdate', { requests: [{ updateCells: { range: gr(tab.sheetId, row - 1, row, 0, 1), rows: [{ values: [{ note: addedByNote(e.by) }] }], fields: 'note' } }] }).catch(function () {});
     }).then(function () { return { row: row }; });
   });
 }
